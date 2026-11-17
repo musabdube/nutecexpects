@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { MdBuild } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa";
-import { motion, useScroll, useTransform } from "motion/react";
+import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
 import { useRef, useState, useEffect } from "react";
 
 const phone = "27736252866";
@@ -54,7 +54,6 @@ const navItems = [
   { label: "Home", href: "#home", Icon: House },
   { label: "About", href: "#about", Icon: Info },
   { label: "Services", href: "#services", Icon: BriefcaseBusiness },
-  { label: "Gallery", href: "/gallery", Icon: Sparkles },
   { label: "Contact", href: "#contact", Icon: Phone },
 ];
 
@@ -166,6 +165,57 @@ function AnimatedHeroText() {
   );
 }
 
+function AnimatedServiceText() {
+  const phrases = [
+    "We build Nutec houses.",
+    "We build Wendy houses.",
+    "We build log cabins.",
+  ];
+
+  const [displayText, setDisplayText] = useState("");
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [isTyping, setIsTyping] = useState(true);
+
+  useEffect(() => {
+    const currentPhrase = phrases[currentPhraseIndex];
+    let timeout: NodeJS.Timeout;
+
+    if (isTyping) {
+      if (displayText.length < currentPhrase.length) {
+        timeout = setTimeout(() => {
+          setDisplayText(currentPhrase.slice(0, displayText.length + 1));
+        }, 55);
+      } else {
+        timeout = setTimeout(() => {
+          setIsTyping(false);
+        }, 1800);
+      }
+    } else {
+      if (displayText.length > 0) {
+        timeout = setTimeout(() => {
+          setDisplayText(displayText.slice(0, -1));
+        }, 25);
+      } else {
+        setCurrentPhraseIndex((prev) => (prev + 1) % phrases.length);
+        setIsTyping(true);
+      }
+    }
+
+    return () => clearTimeout(timeout);
+  }, [displayText, isTyping, currentPhraseIndex]);
+
+  return (
+    <span className="inline-flex items-end gap-1 text-red-600">
+      <span>{displayText}</span>
+      <motion.span
+        animate={{ opacity: [1, 0] }}
+        transition={{ duration: 0.8, repeat: Infinity }}
+        className="mb-1 inline-block h-[1.2em] w-[2px] bg-red-600"
+      />
+    </span>
+  );
+}
+
 export default function Home() {
   const heroRef = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({
@@ -178,6 +228,22 @@ export default function Home() {
   const heroFilter = useTransform(scrollYProgress, [0, 0.5, 1], ["blur(0px)", "blur(2px)", "blur(6px)"]);
   const textY = useTransform(scrollYProgress, [0, 0.35, 0.7], [0, -18, -42]);
   const textOpacity = useTransform(scrollYProgress, [0, 0.25, 0.5, 0.8], [1, 1, 0.5, 0]);
+
+  const serviceImages = [
+    "/images/image4.png",
+    "/images/image1.png",
+    "/images/image2.png",
+    "/images/image3.png",
+  ];
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveImageIndex((prev) => (prev + 1) % serviceImages.length);
+    }, 1800);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <main className="min-h-screen bg-white text-black">
@@ -225,7 +291,7 @@ export default function Home() {
               opacity: heroOpacity,
               filter: heroFilter,
               backgroundImage:
-                "linear-gradient(90deg, rgba(0,0,0,0.9), rgba(0,0,0,0.35)), url('/images/hero1.png')",
+                "linear-gradient(90deg, rgba(0,0,0,0.9), rgba(0,0,0,0.35)), url('/images/hero.jpg')",
             }}
           />
 
@@ -304,51 +370,87 @@ export default function Home() {
             <h2 className="mt-3 text-4xl font-black uppercase">Our Services</h2>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
-            {services.map((service) => (
-              <div
-                key={service.title}
-                className="group overflow-hidden bg-white shadow-sm transition hover:-translate-y-2 hover:shadow-xl"
+          <div className="mb-12 grid items-center gap-10 rounded-[2rem] border border-black/5 bg-white p-6 shadow-sm md:grid-cols-2 md:p-10">
+            <div className="space-y-5">
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-red-600">
+                Built for every purpose
+              </p>
+
+              <h3 className="text-3xl font-black uppercase leading-tight md:text-5xl">
+                <AnimatedServiceText />
+              </h3>
+
+              <p className="max-w-xl text-base leading-7 text-gray-600 md:text-lg">
+                From practical backyard spaces to beautiful lifestyle additions,
+                we create structures built to suit your needs, budget and vision.
+              </p>
+
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-red-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-black"
               >
-                <img
-                  src={service.image}
-                  alt={service.title}
-                  className="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
-                />
+                Enquire Now
+                <ArrowRight size={16} />
+              </a>
+            </div>
 
-                <div className="p-7">
-                  <div className="mb-5 flex items-center gap-3">
-                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-red-100 text-red-600">
-                      {service.title.includes("Wendy") ? (
-                        <Warehouse size={18} />
-                      ) : service.title.includes("Nutec") ? (
-                        <ShieldCheck size={18} />
-                      ) : (
-                        <MapPin size={18} />
-                      )}
-                    </div>
-                    <h3 className="text-2xl font-black uppercase leading-tight">
-                      {service.title}
-                    </h3>
-                  </div>
+            <div className="relative mx-auto flex h-[360px] w-full max-w-[400px] items-center justify-center">
+              <div className="absolute inset-0 rounded-full border border-red-200/90 bg-red-100/30 blur-2xl" />
 
-                  <p className="mt-4 leading-7 text-gray-600">
-                    {service.description}
-                  </p>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 22, ease: "linear", repeat: Infinity }}
+                className="relative h-[280px] w-[280px]"
+              >
+                {serviceImages.map((image, index) => {
+                  const angle = (index * 120 - 90) * (Math.PI / 180);
+                  const radius = 100;
+                  const x = Math.cos(angle) * radius;
+                  const y = Math.sin(angle) * radius;
 
-                  <a
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-6 inline-flex items-center gap-2 rounded-full bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-black"
-                  >
-                    Enquire Now
-                    <ArrowRight size={16} />
-                  </a>
-                </div>
-              </div>
-            ))}
+                  return (
+                    <motion.div
+                      key={image}
+                      animate={{
+                        x,
+                        y,
+                        scale: index === activeImageIndex ? 1.08 : 0.9,
+                        opacity: index === activeImageIndex ? 1 : 0.75,
+                      }}
+                      transition={{ duration: 0.7, ease: "easeInOut" }}
+                      className="absolute left-1/2 top-1/2 h-[150px] w-[150px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-4 border-white shadow-xl"
+                    >
+                      <img
+                        src={image}
+                        alt="Nutec Expects service"
+                        className="h-full w-full object-cover"
+                      />
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeImageIndex}
+                  initial={{ opacity: 0, scale: 0.9, y: 12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: -12 }}
+                  transition={{ duration: 0.45 }}
+                  className="absolute left-1/2 top-1/2 h-[170px] w-[170px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border-[6px] border-white bg-white shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                >
+                  <img
+                    src={serviceImages[activeImageIndex]}
+                    alt="Featured Nutec Expects service"
+                    className="h-full w-full object-cover"
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
+
         </div>
       </section>
 
@@ -431,7 +533,7 @@ export default function Home() {
 
           {/* Email Card */}
           <a
-            href="mailto:augustinerunyowa50@gmail.com"
+            href="mailto:admin@nutecexpects.co.za"
             className="group flex flex-col items-center rounded-lg border-2 border-gray-300 bg-white p-8 transition-all hover:border-red-600 hover:shadow-2xl"
           >
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-200 text-black group-hover:bg-red-600 group-hover:text-white transition-colors">
@@ -439,7 +541,7 @@ export default function Home() {
             </div>
             <h3 className="text-lg font-bold text-black">Email Us</h3>
             <p className="mt-2 text-sm text-gray-600">Drop us a message anytime</p>
-            <p className="mt-3 text-sm font-bold text-gray-700 group-hover:text-red-600">augustinerunyowa50@gmail.com</p>
+            <p className="mt-3 text-sm font-bold text-gray-700 group-hover:text-red-600">admin@nutecexpects.co.za</p>
           </a>
         </div>
 
@@ -475,8 +577,16 @@ export default function Home() {
           <a href="tel:+27736252866" className="hover:text-red-500">
             +27 73 625 2866
           </a>
-          <a href="mailto:augustinerunyowa50@gmail.com" className="hover:text-red-500">
-            augustinerunyowa50@gmail.com
+          <a href="mailto:admin@nutecexpects.co.za" className="hover:text-red-500">
+            admin@nutecexpects.co.za
+          </a>
+          <a
+            href="https://www.facebook.com/share/1ETUa2Xh9W/?mibextid=wwXIfr&wa_status_inline=true"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-red-500"
+          >
+            Facebook Profile
           </a>
         </div>
       </footer>
